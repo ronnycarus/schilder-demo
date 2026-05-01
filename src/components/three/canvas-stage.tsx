@@ -18,7 +18,7 @@ export function CanvasStage() {
           antialias: true,
           toneMapping: THREE.NoToneMapping
         }}
-        shadows
+        shadows="soft"
       >
         <Scene />
       </Canvas>

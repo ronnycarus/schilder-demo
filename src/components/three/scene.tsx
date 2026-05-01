@@ -1,5 +1,7 @@
 'use client';
 
+import { Lighting } from './lighting';
+import { PostFX } from './post-fx';
 import { ScrollCamera } from './scroll-camera';
 
 /**
@@ -13,6 +15,8 @@ export function Scene() {
   return (
     <>
       <ScrollCamera />
+      <Lighting />
+      <PostFX />
     </>
   );
 }
