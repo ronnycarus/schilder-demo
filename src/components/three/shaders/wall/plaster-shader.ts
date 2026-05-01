@@ -2,9 +2,9 @@ import * as THREE from 'three';
 import { SIMPLEX_2D_GLSL } from '../glsl/simplex2d.glsl';
 
 /**
- * Plaster shader — extends MeshStandardMaterial via onBeforeCompile so the
- * wall keeps Three's full PBR pipeline (key + fill + rim directionals,
- * shadows, ACES tonemap, hemisphere) and we only inject what's custom:
+ * Plaster + paint shader — extends MeshStandardMaterial via onBeforeCompile
+ * so the wall keeps Three's full PBR pipeline (key + fill + rim directionals,
+ * shadows, ACES tonemap, hemisphere) and we only inject what's custom.
  *
  *  Vertex side
  *  -----------
@@ -14,12 +14,14 @@ import { SIMPLEX_2D_GLSL } from '../glsl/simplex2d.glsl';
  *  - Displace each vertex along its normal by `fbm(uv) * uPlasterDepth`
  *  - Pass the height to fragment as vDisplacement and the UV as vWallUv
  *
- *  Fragment side
- *  -------------
- *  - Tint diffuseColor by 0.92 + vDisplacement * 0.18  (low spots = darker)
- *  - Roughness left at MeshStandardMaterial default (this shader is
- *    plaster-only; the paint mask layer overrides roughness in the next
- *    commit)
+ *  Fragment side (paint-aware as of commit 2)
+ *  ------------------------------------------
+ *  - Sample uPaintMask at vWallUv; .r is the accumulated paint amount [0..1]
+ *  - Plaster base: uPlasterColor tinted by 0.92 + vDisplacement * 0.18
+ *  - Mix toward uPaintColor by paintAmount → diffuseColor
+ *  - Roughness drops from 0.92 (matte plaster) to 0.42 (semi-gloss paint)
+ *    proportional to paintAmount → freshly painted areas catch a soft
+ *    specular highlight; dry plaster stays flat
  *
  *  Why 3 octaves and not more
  *  --------------------------
@@ -32,23 +34,31 @@ import { SIMPLEX_2D_GLSL } from '../glsl/simplex2d.glsl';
 export interface PlasterUniforms {
   uPlasterColor: { value: THREE.Color };
   uPlasterDepth: { value: number };
+  uPaintMask: { value: THREE.Texture | null };
+  uPaintColor: { value: THREE.Color };
 }
 
 export interface CreatePlasterMaterialOptions {
   plasterColor?: string;
   /** Max vertex displacement in world units (default 0.04 = 4cm). */
   plasterDepth?: number;
+  paintColor?: string;
+  paintMask?: THREE.Texture | null;
 }
 
 export function createPlasterMaterial({
   plasterColor = '#F2EDE2',
-  plasterDepth = 0.04
+  plasterDepth = 0.04,
+  paintColor = '#1F3F6E',
+  paintMask = null
 }: CreatePlasterMaterialOptions = {}): THREE.MeshStandardMaterial & {
   userData: { uniforms: PlasterUniforms };
 } {
   const uniforms: PlasterUniforms = {
     uPlasterColor: { value: new THREE.Color(plasterColor) },
-    uPlasterDepth: { value: plasterDepth }
+    uPlasterDepth: { value: plasterDepth },
+    uPaintMask: { value: paintMask },
+    uPaintColor: { value: new THREE.Color(paintColor) }
   };
 
   const material = new THREE.MeshStandardMaterial({
@@ -106,6 +116,8 @@ export function createPlasterMaterial({
         /* glsl */ `
         #include <common>
         uniform vec3 uPlasterColor;
+        uniform vec3 uPaintColor;
+        uniform sampler2D uPaintMask;
         varying float vDisplacement;
         varying vec2  vWallUv;
         `
@@ -114,12 +126,27 @@ export function createPlasterMaterial({
         '#include <map_fragment>',
         /* glsl */ `
         #include <map_fragment>
-        // Plaster base: tint the diffuse with displacement-driven brightness.
-        // Low spots (negative displacement) read slightly darker, like real
-        // plaster catching less light. 0.18 is the sweet spot between
-        // visible and overwrought.
+        // Sample the accumulated paint mask. .r is the paint coverage.
+        vec4 _maskSample = texture2D(uPaintMask, vWallUv);
+        float _paintAmount = clamp(_maskSample.r, 0.0, 1.0);
+
+        // Plaster base: tint diffuse by displacement-driven brightness.
         float _plasterTint = 0.92 + vDisplacement * 0.18;
-        diffuseColor.rgb = uPlasterColor * _plasterTint;
+        vec3 _plaster = uPlasterColor * _plasterTint;
+
+        diffuseColor.rgb = mix(_plaster, uPaintColor, _paintAmount);
+        `
+      )
+      .replace(
+        '#include <roughnessmap_fragment>',
+        /* glsl */ `
+        #include <roughnessmap_fragment>
+        // Painted areas are slightly glossier than dry plaster.
+        // 0.92 (matte) -> 0.42 (semi-gloss) is enough range for the key
+        // light to pick up a subtle highlight on fresh paint without
+        // reading as wet enamel.
+        vec4 _maskRough = texture2D(uPaintMask, vWallUv);
+        roughnessFactor = mix(0.92, 0.42, clamp(_maskRough.r, 0.0, 1.0));
         `
       );
   };
