@@ -18,7 +18,7 @@ export function CanvasTexture({ className }: { className?: string }) {
     <>
       <div
         aria-hidden
-        className={cn('pointer-events-none fixed inset-0 z-[1] mix-blend-multiply', className)}
+        className={cn('pointer-events-none fixed inset-0 z-[2] mix-blend-multiply', className)}
         style={{
           backgroundImage: `url("data:image/svg+xml;utf8,${encodeURIComponent(NOISE_SVG)}")`,
           backgroundSize: '240px 240px',
@@ -27,7 +27,7 @@ export function CanvasTexture({ className }: { className?: string }) {
       />
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 z-[1] mix-blend-multiply"
+        className="pointer-events-none fixed inset-0 z-[2] mix-blend-multiply"
         style={{
           backgroundImage: `url("data:image/svg+xml;utf8,${encodeURIComponent(BAND_SVG)}")`,
           backgroundSize: '160px 6px',

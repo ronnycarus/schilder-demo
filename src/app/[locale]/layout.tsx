@@ -9,6 +9,7 @@ import { CanvasTexture } from '@/components/paint/canvas-texture';
 import { BrushCursor } from '@/components/paint/brush-cursor';
 import { LenisProvider } from '@/components/paint/lenis-provider';
 import { CanvasStageLoader } from '@/components/three/canvas-stage-loader';
+import { CanvasVignette } from '@/components/three/canvas-vignette';
 import '../globals.css';
 
 const display = localFont({
@@ -69,6 +70,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider>
           <LenisProvider>
             <CanvasStageLoader />
+            <CanvasVignette />
             <CanvasTexture />
             <BrushCursor />
             <div className="relative z-10">{children}</div>
