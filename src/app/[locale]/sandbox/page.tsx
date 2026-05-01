@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { SandboxRow, SandboxCell } from './_components/sandbox-shell';
 import { BrushStroke } from '@/components/paint/brush-stroke';
+import { Drip } from '@/components/paint/drip';
 
 export default async function SandboxPage({
   params
@@ -54,6 +55,21 @@ export default async function SandboxPage({
               height={28}
               variant={3}
             />
+          </SandboxCell>
+        </SandboxRow>
+
+        <SandboxRow
+          name="Drip"
+          description="SVG drip with elastic-ease scaleY tween. Spawns on hover or scroll-in. Used at card bottom edges, focus underlines."
+        >
+          <SandboxCell state="idle">
+            <Drip play={false} color="var(--color-paint)" />
+          </SandboxCell>
+          <SandboxCell state="animating" loop loopInterval={2200}>
+            <Drip play color="var(--color-paint-deep)" duration={1.2} />
+          </SandboxCell>
+          <SandboxCell state="reduced-motion">
+            <Drip reducedMotion color="var(--color-paint-earth)" />
           </SandboxCell>
         </SandboxRow>
       </div>
