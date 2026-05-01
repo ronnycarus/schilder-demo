@@ -1,5 +1,6 @@
 'use client';
 
+import { ContactShadows } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useLenis } from 'lenis/react';
 import { useMemo, useRef } from 'react';
@@ -42,8 +43,14 @@ import { STAGES } from '../stages';
 // Spec §6.1: "from top-left, drags diagonally across the hero". Motion goes
 // upper-left → lower-right, so painted region grows from the left — DOM
 // headline reveal in ScrollDrivenMask uses ltr to match.
-const ROLLER_START = new THREE.Vector3(-8, STAGES.hero.y + 3, 0.18);
-const ROLLER_END = new THREE.Vector3(8, STAGES.hero.y - 3, 0.18);
+//
+// Z = 0.05: brings the sleeve flush against the wall plane (z=0). Sleeve
+// radius is 0.18, so the back ~0.13 of the cylinder pokes INTO the wall —
+// that's fine, the wall is opaque and the back side of the cylinder is
+// invisible. Visually the roller now reads as touching the wall instead
+// of floating in front of it.
+const ROLLER_START = new THREE.Vector3(-8, STAGES.hero.y + 3, 0.05);
+const ROLLER_END = new THREE.Vector3(8, STAGES.hero.y - 3, 0.05);
 const WALL_W = 20;
 const WALL_H = 12;
 const SCROLL_END = 0.4;
@@ -81,6 +88,20 @@ export function HeroStage() {
     <group>
       <WallPanel ref={wallRef} position={[0, STAGES.hero.y, 0]} />
       <Roller ref={rollerRef} paintLevel={1} paintColor="#1F3F6E" />
+      {/* Contact shadow on the wall plane. Rotated 90° around X so the
+          shadow plane sits flat against the wall (default ContactShadows
+          is horizontal); positioned 0.01 in front of the wall to avoid
+          z-fighting with the wall surface. blur=1.5 + opacity=0.3 sells
+          the touch without screaming "drop shadow." */}
+      <ContactShadows
+        position={[0, STAGES.hero.y, 0.01]}
+        rotation={[Math.PI / 2, 0, 0]}
+        scale={20}
+        far={1.5}
+        blur={1.5}
+        opacity={0.3}
+        color="#0a0a0e"
+      />
     </group>
   );
 }
