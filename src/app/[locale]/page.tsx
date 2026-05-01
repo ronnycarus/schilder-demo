@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
+import { ScrollDrivenMask } from '@/components/paint/scroll-driven-mask';
 
 export default async function HomePage({
   params
@@ -20,9 +21,13 @@ export default async function HomePage({
 
         <div className="flex flex-1 flex-col items-start justify-center px-8 pb-16 sm:px-12">
           <p className="font-script mb-4 text-base text-paint/80 sm:text-lg">{t('status')}</p>
-          <h1 className="font-display max-w-4xl text-balance text-5xl font-bold leading-[1.05] tracking-tight sm:text-7xl lg:text-8xl">
-            {t('title')}
-          </h1>
+          {/* Headline reveals in lockstep with the 3D roller — same Lenis
+              progress drives both. Range [0, 0.4] matches HeroStage. */}
+          <ScrollDrivenMask range={[0, 0.4]} direction="ltr">
+            <h1 className="font-display max-w-4xl text-balance text-5xl font-bold leading-[1.05] tracking-tight sm:text-7xl lg:text-8xl">
+              {t('title')}
+            </h1>
+          </ScrollDrivenMask>
           <p className="mt-8 max-w-xl text-base text-ink/70 sm:text-lg">{t('subtitle')}</p>
         </div>
       </section>

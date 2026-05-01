@@ -163,7 +163,9 @@ export const WallPanel = forwardRef<WallPanelHandle, WallPanelProps>(
       []
     );
 
-    // Apply queued stamps to the render target each frame.
+    // Apply queued stamps to the render target each frame. Priority 1 so
+    // this fires AFTER HeroStage's priority-0 useFrame writes its stamp
+    // for the current frame — no one-frame lag.
     useFrame(({ gl: glx }) => {
       if (pendingStampsRef.current.length === 0) return;
 
@@ -185,7 +187,7 @@ export const WallPanel = forwardRef<WallPanelHandle, WallPanelProps>(
 
       glx.setRenderTarget(prevTarget);
       glx.autoClear = prevAutoClear;
-    });
+    }, 1);
 
     // Cleanup on unmount — important because we own GPU resources.
     useEffect(() => {
