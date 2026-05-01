@@ -3,6 +3,7 @@ import { Link } from '@/i18n/navigation';
 import { SandboxRow, SandboxCell } from './_components/sandbox-shell';
 import { BrushStroke } from '@/components/paint/brush-stroke';
 import { Drip } from '@/components/paint/drip';
+import { PaintSplash } from '@/components/paint/paint-splash';
 
 export default async function SandboxPage({
   params
@@ -70,6 +71,21 @@ export default async function SandboxPage({
           </SandboxCell>
           <SandboxCell state="reduced-motion">
             <Drip reducedMotion color="var(--color-paint-earth)" />
+          </SandboxCell>
+        </SandboxRow>
+
+        <SandboxRow
+          name="PaintSplash"
+          description="Multi-blob radial splash. 1 center + 11 satellites with back.out overshoot and randomized stagger. Used for click feedback, page transitions, form-submit confirmation."
+        >
+          <SandboxCell state="idle">
+            <PaintSplash play={false} color="var(--color-paint)" />
+          </SandboxCell>
+          <SandboxCell state="animating" loop loopInterval={2400}>
+            <PaintSplash play color="var(--color-paint-accent)" duration={0.8} />
+          </SandboxCell>
+          <SandboxCell state="reduced-motion">
+            <PaintSplash reducedMotion color="var(--color-paint-deep)" />
           </SandboxCell>
         </SandboxRow>
       </div>
