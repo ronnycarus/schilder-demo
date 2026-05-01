@@ -3,6 +3,7 @@
 import { Lighting } from './lighting';
 import { PostFX } from './post-fx';
 import { ScrollCamera } from './scroll-camera';
+import { TestMesh } from './test-mesh';
 
 /**
  * Single shared scene composed inside the root Canvas.
@@ -16,6 +17,7 @@ export function Scene() {
     <>
       <ScrollCamera />
       <Lighting />
+      <TestMesh />
       <PostFX />
     </>
   );
