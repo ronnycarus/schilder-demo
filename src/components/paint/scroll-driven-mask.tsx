@@ -1,14 +1,24 @@
 'use client';
 
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 import { useLenis } from 'lenis/react';
 import { useReducedMotion as useRMHook } from '@/lib/hooks/use-reduced-motion';
 import { cn } from '@/lib/cn';
 
 type Direction = 'ltr' | 'rtl' | 'ttb' | 'btt';
-type Variant = 1 | 2 | 3;
+type Variant = 'rect' | 1 | 2 | 3;
 
+/**
+ * Mask shapes. 'rect' is a clean axis-aligned rectangle — the only safe
+ * choice when the wrapper shrink-wraps a single line of text, because the
+ * brushy variants get their organic edges flattened by the SVG's
+ * preserveAspectRatio="none" stretch and produce mid-letter artifacts
+ * (the Phase 2.1 hero shipped with the brushy variant 1 and showed partial
+ * letters at every scroll position). 1/2/3 stay available for larger
+ * masked surfaces — Phase 6.4 portfolio reveals will use them.
+ */
 const MASK_PATHS: Record<Variant, string> = {
+  rect: 'M 0 0 L 200 0 L 200 100 L 0 100 Z',
   1: 'M 5 8 C 30 4 70 14 110 6 C 150 0 180 12 195 5 C 200 30 197 60 195 80 C 196 92 192 98 175 95 C 130 92 80 100 30 96 C 12 94 4 88 6 70 C 4 50 8 28 5 8 Z',
   2: 'M 8 12 Q 50 4 100 10 T 195 8 Q 200 50 195 90 Q 100 100 5 92 Q 4 50 8 12 Z',
   3: 'M 4 10 C 60 0 140 18 196 4 C 200 40 198 70 196 96 C 130 100 70 90 4 96 C 2 60 6 30 4 10 Z'
@@ -42,15 +52,23 @@ export interface ScrollDrivenMaskProps {
  * Lenis fires its callback, we mutate one DOM style property, browser
  * recomputes mask. The wrapper is always present in the React tree.
  *
- * vs. PaintMask (the Phase 1 primitive)
- * -------------------------------------
- * PaintMask is GSAP-tween-driven (one-shot, idle/animating/reduced-motion
- * states). ScrollDrivenMask is scroll-progress-driven (continuous, locked
- * to lenis.progress). Some duplication in the mask-styling code; kept
- * intentional since the two have different responsibilities.
+ * Layout
+ * ------
+ * `display: block; width: fit-content` — the wrapper shrink-wraps the
+ * masked content rather than stretching to its parent's width. Without
+ * this, the mask SVG (preserveAspectRatio: none) gets stretched across
+ * the parent's full width even when the headline is only ~600px wide,
+ * which can leave bits of the headline outside the masked region.
+ *
+ * SSR
+ * ---
+ * `--mp` is initialized inline to '0' so server-rendered HTML already has
+ * the correct starting value; the useEffect that sets `--mp` only runs
+ * after hydration, and without the inline default there'd be a flash of
+ * fully-visible content during the gap.
  */
 export function ScrollDrivenMask({
-  variant = 1,
+  variant = 'rect',
   direction = 'ltr',
   range = [0, 0.4],
   reducedMotion: reducedMotionProp,
@@ -90,8 +108,6 @@ export function ScrollDrivenMask({
 
     if (reducedMotion) {
       el.style.setProperty('--mp', '100');
-    } else {
-      el.style.setProperty('--mp', '0');
     }
   }, [variant, direction, reducedMotion]);
 
@@ -106,8 +122,18 @@ export function ScrollDrivenMask({
     el.style.setProperty('--mp', String(localProgress * 100));
   });
 
+  // Inline initial style — guarantees --mp is 0 (or 100 for reduced-motion)
+  // on the very first paint, before the useEffect runs.
+  const initialStyle: CSSProperties = {
+    ['--mp' as string]: reducedMotion ? '100' : '0'
+  } as CSSProperties;
+
   return (
-    <div ref={wrapperRef} className={cn('relative will-change-[mask-size]', className)}>
+    <div
+      ref={wrapperRef}
+      style={initialStyle}
+      className={cn('block w-fit will-change-[mask-size]', className)}
+    >
       {children}
     </div>
   );
