@@ -1,0 +1,21 @@
+{
+  "Brand": {
+    "wordmark": "Studio Kalk",
+    "tagline": "Een rustig huis begint met de juiste verf."
+  },
+  "Phase0": {
+    "status": "fase 0 — fundering",
+    "title": "Studio Kalk",
+    "subtitle": "Een rustig huis begint met de juiste verf. Binnen, buiten — en alles wat ertussen ligt."
+  },
+  "Sandbox": {
+    "title": "Sandbox",
+    "subtitle": "QA-oppervlak voor de verfprimitives. Wordt ingericht in fase 1.",
+    "back": "← terug",
+    "empty": "leeg"
+  },
+  "Footer": {
+    "phase": "fase 0 — fundering · cursor & textuur actief",
+    "sandboxLink": "→ sandbox"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "Brand": {
+    "wordmark": "Studio Kalk",
+    "tagline": "A calm home starts with the right paint."
+  },
+  "Phase0": {
+    "status": "phase 0 — foundation",
+    "title": "Studio Kalk",
+    "subtitle": "A calm home starts with the right paint. Indoors, outdoors — and everything in between."
+  },
+  "Sandbox": {
+    "title": "Sandbox",
+    "subtitle": "QA surface for paint primitives. Lands in phase 1.",
+    "back": "← back",
+    "empty": "empty"
+  },
+  "Footer": {
+    "phase": "phase 0 — foundation · cursor & texture active",
+    "sandboxLink": "→ sandbox"
+  }
+}
