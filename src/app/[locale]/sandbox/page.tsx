@@ -4,6 +4,7 @@ import { SandboxRow, SandboxCell } from './_components/sandbox-shell';
 import { BrushStroke } from '@/components/paint/brush-stroke';
 import { Drip } from '@/components/paint/drip';
 import { PaintSplash } from '@/components/paint/paint-splash';
+import { PaintMask } from '@/components/paint/paint-mask';
 
 export default async function SandboxPage({
   params
@@ -88,7 +89,36 @@ export default async function SandboxPage({
             <PaintSplash reducedMotion color="var(--color-paint-deep)" />
           </SandboxCell>
         </SandboxRow>
+
+        <SandboxRow
+          name="PaintMask"
+          description="CSS mask-image wrapper using a brush-stroke SVG as the reveal mask. Animates a CSS custom property (--mp 0→100) to grow mask-size on a chosen axis. Used in §6.4 portfolio reveals."
+        >
+          <SandboxCell state="idle">
+            <PaintMask play={false} variant={1}>
+              <PaintSampleBlock label="binnenwerk" />
+            </PaintMask>
+          </SandboxCell>
+          <SandboxCell state="animating" loop loopInterval={2800}>
+            <PaintMask play variant={2} duration={1.4}>
+              <PaintSampleBlock label="kalkverf" />
+            </PaintMask>
+          </SandboxCell>
+          <SandboxCell state="reduced-motion">
+            <PaintMask reducedMotion variant={3}>
+              <PaintSampleBlock label="houtwerk" />
+            </PaintMask>
+          </SandboxCell>
+        </SandboxRow>
       </div>
     </main>
+  );
+}
+
+function PaintSampleBlock({ label }: { label: string }) {
+  return (
+    <div className="flex h-32 w-56 items-center justify-center bg-paint">
+      <span className="font-display text-xl font-bold text-canvas">{label}</span>
+    </div>
   );
 }
