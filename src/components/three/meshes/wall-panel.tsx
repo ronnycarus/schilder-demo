@@ -26,6 +26,11 @@ export interface WallPanelProps {
   maskResolution?: [number, number];
   /** Width/height in UV space of each paint stamp. Default [0.025, 0.13]. */
   stampSize?: [number, number];
+  /** Phase 2.1 hotfix only: render the paint-mask render target as a small
+   *  inset plane in world space. Lets us verify stamps are landing
+   *  independent of whether the wall fragment shader is reading them.
+   *  Removed in the hotfix cleanup commit. */
+  debugMask?: boolean;
 }
 
 const STAMP_VERTEX = /* glsl */ `
@@ -40,12 +45,24 @@ const STAMP_FRAGMENT = /* glsl */ `
   varying vec2 vUv;
   uniform float uIntensity;
   void main() {
-    // Soft-edge stamp: oval falloff with smoothstep so accumulated stamps
-    // blend without hard edges. R-channel = paint amount (sampled in the
-    // wall shader); A-channel matches so AdditiveBlending works as expected.
+    // Soft-edge stamp: oval falloff so accumulated stamps blend without
+    // hard edges. R channel = paint amount (sampled in the wall shader);
+    // A matches so AdditiveBlending works.
+    //
+    // d * vec2(2.0, 0.7) anisotropically stretches the falloff so the
+    // stamp reads as a vertical strip — high r along the horizontal
+    // axis (left/right edges fall off first), low r along the vertical
+    // axis (top/bottom stay opaque longer). Matches the roller's
+    // sleeve-vertical orientation.
+    //
+    // Phase 2.1 shipped with smoothstep(0.55, 0.05, r) which is
+    // undefined-behavior GLSL (edge0 > edge1) — some GPUs returned 0
+    // for every fragment, so no paint trail appeared. Using
+    // 1.0 - smoothstep(0.05, 0.55, r) instead gives the same intended
+    // curve (1 at center, 0 at edge) with valid edge0 < edge1.
     vec2 d = vUv - 0.5;
     float r = length(d * vec2(2.0, 0.7));
-    float a = smoothstep(0.55, 0.05, r) * uIntensity;
+    float a = (1.0 - smoothstep(0.05, 0.55, r)) * uIntensity;
     gl_FragColor = vec4(a, 0.0, 0.0, a);
   }
 `;
@@ -76,7 +93,8 @@ export const WallPanel = forwardRef<WallPanelHandle, WallPanelProps>(
       plasterDepth = 0.15,
       position = [0, 0, 0],
       maskResolution = [1024, 512],
-      stampSize = [0.025, 0.13]
+      stampSize = [0.025, 0.13],
+      debugMask = false
     },
     ref
   ) => {
@@ -211,12 +229,24 @@ export const WallPanel = forwardRef<WallPanelHandle, WallPanelProps>(
     }, [renderTarget, geometry, material, stampMesh]);
 
     return (
-      <mesh
-        geometry={geometry}
-        material={material}
-        position={position}
-        receiveShadow
-      />
+      <>
+        <mesh
+          geometry={geometry}
+          material={material}
+          position={position}
+          receiveShadow
+        />
+        {debugMask && (
+          // Bottom-right corner inset showing the paint mask render target
+          // directly. If stamps appear here but not on the wall, the bug is
+          // in the wall shader's sampler. If they don't appear here either,
+          // the bug is in the stamp pipeline. Removed in cleanup commit.
+          <mesh position={[3.4, position[1] - 1.2, 0.4]} scale={[1.6, 0.8, 1]}>
+            <planeGeometry args={[1, 1]} />
+            <meshBasicMaterial map={renderTarget.texture} toneMapped={false} />
+          </mesh>
+        )}
+      </>
     );
   }
 );

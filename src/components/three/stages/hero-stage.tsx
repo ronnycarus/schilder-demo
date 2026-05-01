@@ -86,7 +86,7 @@ export function HeroStage() {
 
   return (
     <group>
-      <WallPanel ref={wallRef} position={[0, STAGES.hero.y, 0]} />
+      <WallPanel ref={wallRef} position={[0, STAGES.hero.y, 0]} debugMask />
       <Roller ref={rollerRef} paintLevel={1} paintColor="#1F3F6E" />
       {/* Contact shadow on the wall plane. Rotated 90° around X so the
           shadow plane sits flat against the wall (default ContactShadows
