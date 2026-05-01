@@ -36,6 +36,9 @@ export interface PlasterUniforms {
   uPlasterDepth: { value: number };
   uPaintMask: { value: THREE.Texture | null };
   uPaintColor: { value: THREE.Color };
+  /** Gates the paint-mask texture sample. Stays false until the first stamp
+   *  lands so we never read uninitialized GPU memory at startup. */
+  uHasPaint: { value: boolean };
 }
 
 export interface CreatePlasterMaterialOptions {
@@ -58,7 +61,8 @@ export function createPlasterMaterial({
     uPlasterColor: { value: new THREE.Color(plasterColor) },
     uPlasterDepth: { value: plasterDepth },
     uPaintMask: { value: paintMask },
-    uPaintColor: { value: new THREE.Color(paintColor) }
+    uPaintColor: { value: new THREE.Color(paintColor) },
+    uHasPaint: { value: false }
   };
 
   const material = new THREE.MeshStandardMaterial({
@@ -110,6 +114,10 @@ export function createPlasterMaterial({
       );
 
     // ── Fragment ────────────────────────────────────────────────────────
+    // Compute paintAmount once at the top of main() and reuse in both the
+    // <map_fragment> (diffuse mix) and <roughnessmap_fragment> (roughness
+    // blend) injections. The uHasPaint uniform gates the texture sample
+    // entirely so we never read GPU memory before the first stamp lands.
     shader.fragmentShader = shader.fragmentShader
       .replace(
         '#include <common>',
@@ -118,18 +126,25 @@ export function createPlasterMaterial({
         uniform vec3 uPlasterColor;
         uniform vec3 uPaintColor;
         uniform sampler2D uPaintMask;
+        uniform bool uHasPaint;
         varying float vDisplacement;
         varying vec2  vWallUv;
+        `
+      )
+      .replace(
+        'void main() {',
+        /* glsl */ `
+        void main() {
+          float _paintAmount = 0.0;
+          if (uHasPaint) {
+            _paintAmount = clamp(texture2D(uPaintMask, vWallUv).r, 0.0, 1.0);
+          }
         `
       )
       .replace(
         '#include <map_fragment>',
         /* glsl */ `
         #include <map_fragment>
-        // Sample the accumulated paint mask. .r is the paint coverage.
-        vec4 _maskSample = texture2D(uPaintMask, vWallUv);
-        float _paintAmount = clamp(_maskSample.r, 0.0, 1.0);
-
         // Plaster base: tint diffuse by displacement-driven brightness.
         float _plasterTint = 0.92 + vDisplacement * 0.18;
         vec3 _plaster = uPlasterColor * _plasterTint;
@@ -145,8 +160,7 @@ export function createPlasterMaterial({
         // 0.92 (matte) -> 0.42 (semi-gloss) is enough range for the key
         // light to pick up a subtle highlight on fresh paint without
         // reading as wet enamel.
-        vec4 _maskRough = texture2D(uPaintMask, vWallUv);
-        roughnessFactor = mix(0.92, 0.42, clamp(_maskRough.r, 0.0, 1.0));
+        roughnessFactor = mix(0.92, 0.42, _paintAmount);
         `
       );
   };

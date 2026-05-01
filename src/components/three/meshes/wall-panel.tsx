@@ -141,6 +141,11 @@ export const WallPanel = forwardRef<WallPanelHandle, WallPanelProps>(
     );
 
     // Clear the mask on mount so we don't inherit GPU memory garbage.
+    // useLayoutEffect (not useEffect) so the clear runs synchronously after
+    // commit, before the browser's next paint and before R3F's first rAF
+    // tick — guarantees the wall shader never sees uninitialized memory.
+    // Clears all three buffers (true, true, true) for belt-and-suspenders
+    // even though the RT has no depth/stencil buffers attached.
     useEffect(() => {
       const prevTarget = gl.getRenderTarget();
       const prevClearColor = new THREE.Color();
@@ -148,7 +153,7 @@ export const WallPanel = forwardRef<WallPanelHandle, WallPanelProps>(
       const prevClearAlpha = gl.getClearAlpha();
       gl.setRenderTarget(renderTarget);
       gl.setClearColor(0x000000, 0);
-      gl.clear(true, false, false);
+      gl.clear(true, true, true);
       gl.setRenderTarget(prevTarget);
       gl.setClearColor(prevClearColor, prevClearAlpha);
     }, [gl, renderTarget]);
@@ -158,9 +163,14 @@ export const WallPanel = forwardRef<WallPanelHandle, WallPanelProps>(
       () => ({
         paintAt(u: number, v: number, intensity = 0.5) {
           pendingStampsRef.current.push({ u, v, intensity });
+          // Flip the gate on so the wall shader starts sampling the mask.
+          // Idempotent — setting to true repeatedly is free.
+          const u_ = (material as { userData: { uniforms: { uHasPaint: { value: boolean } } } })
+            .userData.uniforms.uHasPaint;
+          if (!u_.value) u_.value = true;
         }
       }),
-      []
+      [material]
     );
 
     // Apply queued stamps to the render target each frame. Priority 1 so
