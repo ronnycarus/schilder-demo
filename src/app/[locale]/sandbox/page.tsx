@@ -5,6 +5,7 @@ import { BrushStroke } from '@/components/paint/brush-stroke';
 import { Drip } from '@/components/paint/drip';
 import { PaintSplash } from '@/components/paint/paint-splash';
 import { PaintMask } from '@/components/paint/paint-mask';
+import { RollerSweep } from '@/components/paint/roller-sweep';
 
 export default async function SandboxPage({
   params
@@ -87,6 +88,40 @@ export default async function SandboxPage({
           </SandboxCell>
           <SandboxCell state="reduced-motion">
             <PaintSplash reducedMotion color="var(--color-paint-deep)" />
+          </SandboxCell>
+        </SandboxRow>
+
+        <SandboxRow
+          name="RollerSweep"
+          description="Roller traverses the wall while clip-path: inset() reveals the painted layer behind. The centerpiece of §6.1 hero and §6.3 process scene; ScrollTrigger scrub-driven in production."
+        >
+          <SandboxCell state="idle">
+            <RollerSweep
+              play={false}
+              baseColor="var(--color-canvas)"
+              paintColor="var(--color-paint)"
+              width={240}
+              height={96}
+            />
+          </SandboxCell>
+          <SandboxCell state="animating" loop loopInterval={3400}>
+            <RollerSweep
+              play
+              baseColor="var(--color-canvas)"
+              paintColor="var(--color-paint-deep)"
+              duration={1.6}
+              width={240}
+              height={96}
+            />
+          </SandboxCell>
+          <SandboxCell state="reduced-motion">
+            <RollerSweep
+              reducedMotion
+              baseColor="var(--color-canvas)"
+              paintColor="var(--color-paint-accent)"
+              width={240}
+              height={96}
+            />
           </SandboxCell>
         </SandboxRow>
 
