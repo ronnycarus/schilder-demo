@@ -26,11 +26,6 @@ export interface WallPanelProps {
   maskResolution?: [number, number];
   /** Width/height in UV space of each paint stamp. Default [0.025, 0.13]. */
   stampSize?: [number, number];
-  /** Phase 2.1 hotfix only: render the paint-mask render target as a small
-   *  inset plane in world space. Lets us verify stamps are landing
-   *  independent of whether the wall fragment shader is reading them.
-   *  Removed in the hotfix cleanup commit. */
-  debugMask?: boolean;
 }
 
 const STAMP_VERTEX = /* glsl */ `
@@ -93,8 +88,7 @@ export const WallPanel = forwardRef<WallPanelHandle, WallPanelProps>(
       plasterDepth = 0.15,
       position = [0, 0, 0],
       maskResolution = [1024, 512],
-      stampSize = [0.025, 0.13],
-      debugMask = false
+      stampSize = [0.025, 0.13]
     },
     ref
   ) => {
@@ -229,24 +223,12 @@ export const WallPanel = forwardRef<WallPanelHandle, WallPanelProps>(
     }, [renderTarget, geometry, material, stampMesh]);
 
     return (
-      <>
-        <mesh
-          geometry={geometry}
-          material={material}
-          position={position}
-          receiveShadow
-        />
-        {debugMask && (
-          // Bottom-right corner inset showing the paint mask render target
-          // directly. If stamps appear here but not on the wall, the bug is
-          // in the wall shader's sampler. If they don't appear here either,
-          // the bug is in the stamp pipeline. Removed in cleanup commit.
-          <mesh position={[3.4, position[1] - 1.2, 0.4]} scale={[1.6, 0.8, 1]}>
-            <planeGeometry args={[1, 1]} />
-            <meshBasicMaterial map={renderTarget.texture} toneMapped={false} />
-          </mesh>
-        )}
-      </>
+      <mesh
+        geometry={geometry}
+        material={material}
+        position={position}
+        receiveShadow
+      />
     );
   }
 );
