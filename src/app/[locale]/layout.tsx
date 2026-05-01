@@ -8,6 +8,7 @@ import { routing } from '@/i18n/routing';
 import { CanvasTexture } from '@/components/paint/canvas-texture';
 import { BrushCursor } from '@/components/paint/brush-cursor';
 import { LenisProvider } from '@/components/paint/lenis-provider';
+import { CanvasStageLoader } from '@/components/three/canvas-stage-loader';
 import '../globals.css';
 
 const display = localFont({
@@ -67,9 +68,10 @@ export default async function LocaleLayout({
       <body className="relative min-h-screen bg-canvas font-body text-ink">
         <NextIntlClientProvider>
           <LenisProvider>
+            <CanvasStageLoader />
             <CanvasTexture />
             <BrushCursor />
-            <div className="relative z-[2]">{children}</div>
+            <div className="relative z-10">{children}</div>
           </LenisProvider>
         </NextIntlClientProvider>
       </body>
