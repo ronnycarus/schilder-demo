@@ -6,6 +6,7 @@ import { Drip } from '@/components/paint/drip';
 import { PaintSplash } from '@/components/paint/paint-splash';
 import { PaintMask } from '@/components/paint/paint-mask';
 import { RollerSweep } from '@/components/paint/roller-sweep';
+import { DripCounter } from '@/components/paint/drip-counter';
 
 export default async function SandboxPage({
   params
@@ -143,6 +144,27 @@ export default async function SandboxPage({
             <PaintMask reducedMotion variant={3}>
               <PaintSampleBlock label="houtwerk" />
             </PaintMask>
+          </SandboxCell>
+        </SandboxRow>
+
+        <SandboxRow
+          name="DripCounter"
+          description="Per-digit column animated upward with elastic.out settle. Each digit slot is overflow-hidden over a 0–9 stack; columns drip into place with a per-digit stagger. Replaces Terminal's odometer in §6.1 hero."
+        >
+          <SandboxCell state="idle">
+            <span className="text-paint text-6xl">
+              <DripCounter value="240" play={false} />
+            </span>
+          </SandboxCell>
+          <SandboxCell state="animating" loop loopInterval={3200}>
+            <span className="text-paint-deep text-6xl">
+              <DripCounter value="2014" play duration={1.2} ariaLabel="2014" />
+            </span>
+          </SandboxCell>
+          <SandboxCell state="reduced-motion">
+            <span className="text-paint-earth text-6xl">
+              <DripCounter value="240" reducedMotion ariaLabel="240" />
+            </span>
           </SandboxCell>
         </SandboxRow>
       </div>
