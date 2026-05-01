@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import { Geist, Inter, Caveat } from 'next/font/google';
+import localFont from 'next/font/local';
+import { Inter, Caveat } from 'next/font/google';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
@@ -9,10 +10,21 @@ import { BrushCursor } from '@/components/paint/brush-cursor';
 import { LenisProvider } from '@/components/paint/lenis-provider';
 import '../globals.css';
 
-const display = Geist({
+const display = localFont({
   variable: '--font-display-raw',
-  subsets: ['latin'],
-  display: 'swap'
+  display: 'swap',
+  src: [
+    {
+      path: '../../../public/fonts/cabinet-grotesk-bold.woff2',
+      weight: '700',
+      style: 'normal'
+    },
+    {
+      path: '../../../public/fonts/cabinet-grotesk-extrabold.woff2',
+      weight: '800',
+      style: 'normal'
+    }
+  ]
 });
 
 const body = Inter({
