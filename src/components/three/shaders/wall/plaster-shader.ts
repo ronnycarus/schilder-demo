@@ -51,7 +51,7 @@ export interface CreatePlasterMaterialOptions {
 
 export function createPlasterMaterial({
   plasterColor = '#F2EDE2',
-  plasterDepth = 0.04,
+  plasterDepth = 0.15,
   paintColor = '#1F3F6E',
   paintMask = null
 }: CreatePlasterMaterialOptions = {}): THREE.MeshStandardMaterial & {
@@ -100,6 +100,32 @@ export function createPlasterMaterial({
           }
           return total * 0.286; // 1.0 / (1 + 0.5 + 0.25) ≈ 0.286
         }
+        `
+      )
+      // Replace the standard <beginnormal_vertex> chunk to recompute
+      // objectNormal from the FBM gradient. Without this, the displaced
+      // surface still gets shaded with the original flat plane normals
+      // (vNormal = +Z everywhere) and the bumps are completely invisible
+      // in the lit result. Finite-difference along U and V with epsilon
+      // = 0.001; multiply gradient by 1/epsilon = 1000 to recover the
+      // per-UV slope. For a default PlaneGeometry (normal +Z, tangents
+      // along +X and +Y), the displaced surface normal in object space
+      // is normalize(vec3(-grad.u, -grad.v, 1)). Three's standard chunks
+      // run after this point — <defaultnormal_vertex> applies the
+      // normalMatrix and <normal_vertex> writes vNormal — so PBR
+      // lighting picks up the new normals automatically.
+      .replace(
+        '#include <beginnormal_vertex>',
+        /* glsl */ `
+        vec3 objectNormal = vec3(normal);
+        #ifdef USE_TANGENT
+          vec3 objectTangent = vec3(tangent.xyz);
+        #endif
+        float _hCenter = plasterFbm(uv);
+        float _hU = plasterFbm(uv + vec2(0.001, 0.0));
+        float _hV = plasterFbm(uv + vec2(0.0, 0.001));
+        vec2 _grad = vec2(_hU - _hCenter, _hV - _hCenter) * uPlasterDepth * 1000.0;
+        objectNormal = normalize(vec3(-_grad.x, -_grad.y, 1.0));
         `
       )
       .replace(

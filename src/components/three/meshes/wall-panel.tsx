@@ -70,10 +70,10 @@ export const WallPanel = forwardRef<WallPanelHandle, WallPanelProps>(
   (
     {
       size = [20, 12],
-      subdivisions = [128, 64],
+      subdivisions = [256, 160],
       plasterColor = '#F2EDE2',
       paintColor = '#1F3F6E',
-      plasterDepth = 0.04,
+      plasterDepth = 0.15,
       position = [0, 0, 0],
       maskResolution = [1024, 512],
       stampSize = [0.025, 0.13]
