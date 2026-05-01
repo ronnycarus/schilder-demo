@@ -3,6 +3,7 @@
 import { ReactLenis } from 'lenis/react';
 import type { LenisOptions } from 'lenis';
 import { useReducedMotion } from '@/lib/hooks/use-reduced-motion';
+import { ScrollTriggerSync } from './scroll-trigger-sync';
 
 export function LenisProvider({ children }: { children: React.ReactNode }) {
   const reducedMotion = useReducedMotion();
@@ -13,6 +14,7 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <ReactLenis root options={options}>
+      <ScrollTriggerSync />
       {children}
     </ReactLenis>
   );
