@@ -23,7 +23,7 @@ export function Scene() {
       <ScrollCamera />
       <Lighting />
       <WallPanel position={[0, STAGES.hero.y, 0]} />
-      <Roller position={[3, STAGES.hero.y + 1, 0.6]} />
+      <Roller position={[3, STAGES.hero.y + 1, 0.6]} paintLevel={1} paintColor="#1F3F6E" />
       <PostFX />
     </>
   );
